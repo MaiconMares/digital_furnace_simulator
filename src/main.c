@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "../modules/ESP32_communicator.h"
 #include <unistd.h>
+#include "../inc/ESP32_communicator.h"
 
 int main(int argc, char const *argv[])
 {

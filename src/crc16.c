@@ -4,6 +4,8 @@
  *  Created on: 18/03/2014
  *      Author: Renato Coral Sampaio
  */
+#include "../inc/crc16.h"
+
 
 short CRC16(short crc, char data)
 {

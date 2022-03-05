@@ -1,4 +1,4 @@
-#include "./ESP32_communicator.h"
+#include "../inc/ESP32_communicator.h"
 #include <unistd.h>
 #include <termios.h>
 #include <fcntl.h>
