@@ -1,6 +1,10 @@
 #ifndef ESP32_COMMUNICATOR_H_
 #define ESP32_COMMUNICATOR_H_
 
+enum state { off, on };
+enum mode { potentiometer, curve, terminal };
+extern enum state sys_state;
+extern enum mode control_mode;
 
 void initUART(int *uart0_filestream);
 
