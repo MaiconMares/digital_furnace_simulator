@@ -3,6 +3,7 @@
 #include <fcntl.h>
 #include <stdio.h>
 #include "../inc/ESP32_communicator.h"
+#include "../inc/crc16.h"
 
 enum state sys_state = off;
 enum mode control_mode = potentiometer;
@@ -32,8 +33,10 @@ void initUART(int *uart0_filestream)
 float requestTemperature(int *uart0_filestream, int temperature_code)
 {
     int value = 0;
-    unsigned char tx_buffer[8];
+    unsigned char tx_buffer[9];
     short crc = 0;
+
+    printf("----------requestTemperature()----------\n");
 
     tx_buffer[0] = 1;
     tx_buffer[1] = 35;
@@ -43,12 +46,15 @@ float requestTemperature(int *uart0_filestream, int temperature_code)
     tx_buffer[5] = 1;
     tx_buffer[6] = 1;
 
+    crc = calcula_CRC(tx_buffer, 7);
+    memcpy(&tx_buffer[7], &crc, 2);
+
     initUART(uart0_filestream);
     printf("Inicializou UART\n");
     if (*uart0_filestream != -1)
     {
         printf("Escrevendo dados na UART...\n");
-        int count = write(*uart0_filestream, tx_buffer, 7);
+        int count = write(*uart0_filestream, tx_buffer, 9);
         if (count < 0)
         {
             printf("UART TX error\n");
@@ -70,6 +76,7 @@ float requestTemperature(int *uart0_filestream, int temperature_code)
         short crcReceived = 0;
 
         memcpy(&data, &rx_buffer[3], 4);
+        memcpy(&crcReceived, &rx_buffer[7], 2);
 
         if (rx_length < 0)
         {
@@ -84,6 +91,17 @@ float requestTemperature(int *uart0_filestream, int temperature_code)
             printf("Código da função: %x\n", rx_buffer[1]);
             printf("Comando de envio: %x\n", rx_buffer[2]);
             printf("%i bytes recebidos: %f\n", rx_length, data);
+
+            printf("CRC Recebido: %hi\n", crcReceived);
+            printf("Comparando CRC's...\n");
+
+            short crcValidated = calcula_CRC(rx_buffer, 7);
+            printf("CRC calculado: %hi\n", crcValidated);
+
+            if (crcValidated != crcReceived)
+                printf("CRC's diferentes. Por favor, informe os dados novamente!\n");
+            else
+                printf("O CRC recebido é válido!\n");
 
             close(*uart0_filestream);
             return data;
