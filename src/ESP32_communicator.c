@@ -233,9 +233,9 @@ void sendControlSignal(int *uart0_filestream, int signal)
     close(*uart0_filestream);
 }
 
-void referenceSignal(int *uart0_filestream, float signal)
+void sendReferenceSignal(int *uart0_filestream, float signal)
 {
-    unsigned char tx_buffer[11];
+    unsigned char tx_buffer[14];
     short crc = 0;
 
     printf("----------sendReferenceSignal()----------\n");
@@ -250,12 +250,15 @@ void referenceSignal(int *uart0_filestream, float signal)
 
     memcpy(&tx_buffer[7], &signal, 4);
 
+    crc = calcula_CRC(tx_buffer, 11);
+    memcpy(&tx_buffer[11], &crc, 2);
+
     initUART(uart0_filestream);
     printf("Inicializou UART\n");
     if (*uart0_filestream != -1)
     {
         printf("Escrevendo dados na UART...\n");
-        int count = write(*uart0_filestream, tx_buffer, 7);
+        int count = write(*uart0_filestream, tx_buffer, 13);
         if (count < 0)
             printf("UART TX error\n");
         else
