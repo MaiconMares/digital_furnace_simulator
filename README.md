@@ -1,8 +1,9 @@
 # digital_furnace_simulator
 
-## Propósito: este é um projeto de software para a simulação de um sistema de forno industrial digital simulado por meio de um sistema embarcado.
-
+## Propósito
+<p>Este é um projeto de software para a simulação de um sistema de forno industrial digital simulado por meio de um sistema embarcado.</p>
 <p> Os comandos a seguir devem ser executados na pasta raiz do projeto</p>
+
 ## Compilar
 ```make```
 
