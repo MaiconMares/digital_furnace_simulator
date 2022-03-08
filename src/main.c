@@ -6,6 +6,7 @@
 #include "../inc/ESP32_communicator.h"
 #include "../inc/pid.h"
 #include "../inc/LCD_I2C_driver.h"
+#include "../inc/CSV_handler.h"
 
 int PWM_LED1_res = 4;
 int PWM_LED2_fan = 5;
@@ -28,6 +29,27 @@ enum user_input
 };
 
 enum user_input user_input_read = not_read;
+
+void init_csv_files()
+{
+    FILE *log_pot = fopen("potentiometer_log.csv", "w");
+
+    fprintf(log_pot, "data/hora, temp. interna, temp. externa, temp. referência, sinal");
+
+    fclose(log_pot);
+
+    FILE *log_curve = fopen("curve_log.csv", "w");
+
+    fprintf(log_curve, "data/hora, temp. interna, temp. externa, temp. referência, sinal");
+
+    fclose(log_curve);
+
+    FILE *log_term = fopen("curve_log.csv", "w");
+
+    fprintf(log_term, "data/hora, temp. interna, temp. externa, temp. referência, sinal");
+
+    fclose(log_term);
+}
 
 void define_terminal_mode()
 {
@@ -221,6 +243,8 @@ int main(int argc, char const *argv[])
     fd = wiringPiI2CSetup(I2C_ADDR);
     lcd_init(fd);
 
+    init_csv_files();
+
     sendSystemState(&uart0_filestream, 0);
     sendControlMode(&uart0_filestream, 0);
     menu(control_mode);
@@ -265,9 +289,11 @@ int main(int argc, char const *argv[])
                     double signal = pid_controle((double)internalTemp);
                     activate_actuators(signal);
 
+                    float externTemp = 0.0;
+
+                    write_log_CSV(internalTemp, externTemp, potenTemp, signal, "potentiometer_log.csv");
                     print_temp_mode_LCD(internalTemp, potenTemp, 0.0, potentiometer);
 
-                    //Printar no CSV
                     comm = readsUserInput(&uart0_filestream);
                     if (comm == 4)
                     {
@@ -290,6 +316,7 @@ int main(int argc, char const *argv[])
         }
         else if (comm == 4 && (control_mode == curve))
         {
+            int curr_time = 0;
             printf("Curva tentativa!\n");
             if (sys_state == on)
             {
@@ -300,17 +327,17 @@ int main(int argc, char const *argv[])
 
                     float internalTemp = requestTemperature(&uart0_filestream, 193);
 
-                    //Ler temperatura do arquivo
-                    printf("Temperatura interna: %f\n", internalTemp);
-                    //printf("Temperatura curva: %f\n", potenTemp);
+                    int curveTemp = read_curve_CSV(curr_time, "curva_reflow.csv");
 
-                    sendReferenceSignal(&uart0_filestream, 0.0);
+                    sendReferenceSignal(&uart0_filestream, (float)curveTemp);
+                    pid_atualiza_referencia(curveTemp);
+                    double signal = pid_controle((double)internalTemp);
+                    activate_actuators(signal);
 
-                    //pid_atualiza_referencia(potenTemp);
-                    //double signal = pid_controle((double)internalTemp);
-                    //activate_actuators(signal);
+                    float externTemp = 0.0;
 
-                    print_temp_mode_LCD(internalTemp, 0.0, 0.0, curve);
+                    write_log_CSV(internalTemp, externTemp, curveTemp, signal, "curve_log.csv");
+                    print_temp_mode_LCD(internalTemp, curveTemp, externTemp, curve);
 
                     comm = readsUserInput(&uart0_filestream);
                     if (comm == 4)
@@ -330,6 +357,7 @@ int main(int argc, char const *argv[])
                         break;
                     }
                     sleep(1);
+                    curr_time++;
                 }
 
                 //Começar a partir da temperatura externa
@@ -347,16 +375,15 @@ int main(int argc, char const *argv[])
 
                     float internalTemp = requestTemperature(&uart0_filestream, 193);
 
-                    //Ler temperatura do arquivo
-                    printf("Temperatura interna: %f\n", internalTemp);
-                    printf("Temperatura terminal: %f\n", terminal_temp);
-
-                    sendReferenceSignal(&uart0_filestream, 0.0);
+                    sendReferenceSignal(&uart0_filestream, terminal_temp);
                     pid_atualiza_referencia(terminal_temp);
                     double signal = pid_controle((double)internalTemp);
                     activate_actuators(signal);
 
-                    print_temp_mode_LCD(internalTemp, terminal_temp, 0.0, terminal);
+                    float externTemp = 0.0;
+
+                    write_log_CSV(internalTemp, externTemp, terminal_temp, signal, "../csv/terminal_log.csv");
+                    print_temp_mode_LCD(internalTemp, terminal_temp, externTemp, terminal);
 
                     comm = readsUserInput(&uart0_filestream);
                     if (comm == 4)
