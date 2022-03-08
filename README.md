@@ -1,5 +1,7 @@
 # digital_furnace_simulator
 
+autor: Maicon Lucas Mares - 180023411
+
 ## Propósito
 <p>Este é um projeto de software para a simulação de um sistema de forno industrial digital simulado por meio de um sistema embarcado.</p>
 <p> Os comandos a seguir devem ser executados na pasta raiz do projeto</p>
@@ -17,6 +19,7 @@ Inicialmente, será apresentado um menu na linha de comando e deve-se definir o 
 - Via potenciômetro
 - Via curvas de reflow
 - Via terminal
+
 **Obs.:** Repare que o sistema só iniciará de fato a acionar os atuadores após o botão **Ligar** estiver acionado.
 
 ![Screenshot from 2022-03-08 00-19-19](https://user-images.githubusercontent.com/47460478/157160006-e2a77daa-f3e3-44b1-90e3-c27d2347b664.png)
